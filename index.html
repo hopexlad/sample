@@ -1,1 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Campus Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; }
+        #map { width: 100vw; height: 100vh; }
+        
+        /* UI Buttons */
+        .ui-container {
+            position: absolute;
+            bottom: 120px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            z-index: 1001;
+        }
+
+        .button {
+            margin: 5px 0;
+            padding: 10px;
+            width: 120px;
+            text-align: center;
+            background: green;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        /* Search Bar */
+        .search-container {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1002;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 5px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+        }
+
+        #search-input {
+            width: 200px;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        #search-button {
+            margin-left: 5px;
+            padding: 5px 10px;
+            border: none;
+            background: green;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Search Bar -->
+    <div class="search-container">
+        <input type="text" id="search-input" placeholder="Search rooms..." />
+        <button id="search-button">Search</button>
+    </div>
+
+    <!-- UI Buttons -->
+    <div class="ui-container">
+        <button class="button" onclick="toggleRooms()">Toggle Rooms</button>
+        <button class="button" onclick="toggleTracking()">Live Location</button>
+    </div>
+
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        var map = L.map('map', { minZoom: -2, maxZoom: 4, crs: L.CRS.Simple });
+        var userMarker = null;
+        var tracking = false;
+        var routeLine = null;
+
+        var campus = {
+            image: 'campus.png',
+            bounds: [[0, 0], [302, 754]],
+            markers: [
+                { name: "Library", coords: [47.74, 512.00] },
+                { name: "Auditorium", coords: [250.85, 601.00] },
+                { name: "Food Court", coords: [214.83, 717.00] }
+            ]
+        };
+
+        var imageOverlay = L.imageOverlay(campus.image, campus.bounds).addTo(map);
+        map.fitBounds(campus.bounds);
+
+        var icon = L.icon({ iconUrl: 'ok.png', iconSize: [20, 20] });
+        var roomMarkers = [];
+
+        function toggleRooms() {
+            if (roomMarkers.length) {
+                roomMarkers.forEach(marker => map.removeLayer(marker));
+                roomMarkers = [];
+            } else {
+                campus.markers.forEach(room => {
+                    var marker = L.marker(room.coords, { icon }).addTo(map)
+                        .bindTooltip(room.name, { permanent: false, direction: 'top' });
+                    roomMarkers.push(marker);
+                });
+            }
+        }
+
+        function searchRoom() {
+            var searchValue = document.getElementById("search-input").value.toLowerCase();
+            var foundRoom = campus.markers.find(room => room.name.toLowerCase().includes(searchValue));
+
+            if (foundRoom) {
+                highlightRoom(foundRoom);
+            } else {
+                alert("Room not found!");
+            }
+        }
+
+        document.getElementById("search-button").addEventListener("click", searchRoom);
+
+        function highlightRoom(room) {
+            map.setView(room.coords, 3);
+            var marker = L.marker(room.coords, { icon }).addTo(map)
+                .bindTooltip(room.name, { permanent: true, direction: 'top' });
+
+            setTimeout(() => map.removeLayer(marker), 3000);
+
+            if (userMarker) {
+                drawRoute(userMarker.getLatLng(), room.coords);
+            }
+        }
+
+        function drawRoute(userCoords, roomCoords) {
+            if (routeLine) {
+                map.removeLayer(routeLine);
+            }
+
+            routeLine = L.polyline([userCoords, roomCoords], { color: 'blue', weight: 3 }).addTo(map);
+        }
+
+        function toggleTracking() {
+            tracking = !tracking;
+
+            if (tracking) {
+                if (navigator.geolocation) {
+                    navigator.geolocation.watchPosition(updateLocation, handleLocationError, {
+                        enableHighAccuracy: true
+                    });
+                } else {
+                    alert("Geolocation is not supported by your browser.");
+                }
+            } else {
+                if (userMarker) {
+                    map.removeLayer(userMarker);
+                    userMarker = null;
+                }
+            }
+        }
+
+        function updateLocation(position) {
+            var lat = position.coords.latitude;
+            var lng = position.coords.longitude;
+            
+            // Convert real-world GPS coordinates to campus map coordinates (needs a proper transformation function)
+            var campusX = (lat - 11.0804) * 50000;
+            var campusY = (lng - 77.1362) * 50000;
+
+            if (userMarker) {
+                userMarker.setLatLng([campusX, campusY]);
+            } else {
+                userMarker = L.marker([campusX, campusY], { icon }).addTo(map)
+                    .bindTooltip("You are here", { permanent: true, direction: 'top' });
+            }
+
+            map.setView([campusX, campusY], 3);
+        }
+
+        function handleLocationError(error) {
+            console.warn("Geolocation error:", error.message);
+        }
+    </script>
+</body>
+</html>
 
