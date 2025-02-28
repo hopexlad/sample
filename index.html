@@ -87,8 +87,16 @@
             image: 'campus (2).png',
             bounds: [[0, 0], [302, 754]],
             markers: [
-                { name: "College Main Gate", coords: [295.89, 263.14], realCoords: [11.081048, 77.135554] },
-                { name: "College Library", coords: [51.79, 556.20], realCoords: [11.080431, 77.136443] }
+                { name: "College Main Gate", coords: [295.89, 263.14] },
+                { name: "Library", coords: [51.79, 556.20] },
+                { name: "Food Court 1", coords: [214.83, 717.00] },
+                { name: "Auditorium 1", coords: [250.85, 601.00] },
+                { name: "Seminar Hall", coords: [154.80, 610.00] },
+                { name: "Mess", coords: [190.82, 603.00] },
+                { name: "Lab 4", coords: [201.83, 514.00] },
+                { name: "OAT", coords: [150.80, 429.00] },
+                { name: "Lab 5", coords: [264.86, 482.00] },
+                { name: "Principal Office", coords: [36.87, 11.50] }
             ]
         };
 
@@ -134,13 +142,13 @@
         document.getElementById("search-button").addEventListener("click", searchRoom);
 
         // Set Live Location to Updated Campus Coordinates
-        var liveLocation = { coords: [328.45, 264.57], realCoords: [11.081145, 77.135549] };
-        var liveIcon = L.icon({ iconUrl: 'live.png', iconSize: [25, 25] });
+        var liveLocation = { coords: [328.45, 264.57] };
+        var liveIcon = L.icon({ iconUrl: 'ok (2).png', iconSize: [25, 25] });
 
         var liveMarker = L.marker(liveLocation.coords, { icon: liveIcon }).addTo(map)
             .bindTooltip("You are here", { permanent: true, direction: 'top' });
 
-        // Navigation Function
+        // Navigation Function with Stepped Path
         function navigateToRoom() {
             var searchValue = document.getElementById("search-input").value.toLowerCase();
             var destination = campus.markers.find(room => room.name.toLowerCase().includes(searchValue));
@@ -153,7 +161,17 @@
             var start = liveLocation.coords;
             var end = destination.coords;
 
-            var path = L.polyline([start, end], { color: 'blue', weight: 4 }).addTo(map);
+            // Simulated stepped navigation (hallway-based)
+            var midX = (start[0] + end[0]) / 2;
+            var midY = (start[1] + end[1]) / 2;
+            var waypoints = [
+                start,
+                [midX, start[1]], // Move horizontally
+                [midX, end[1]],   // Move vertically
+                end
+            ];
+
+            var path = L.polyline(waypoints, { color: 'blue', weight: 4 }).addTo(map);
             map.fitBounds([start, end]);
 
             setTimeout(() => map.removeLayer(path), 10000);
@@ -162,3 +180,4 @@
     </script>
 </body>
 </html>
+
