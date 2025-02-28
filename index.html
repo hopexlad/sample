@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive Campus Map with Navigation</title>
+    <title>Interactive Campus Map</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <style>
         body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; }
         #map { width: 100vw; height: 100vh; }
 
+        /* UI Buttons */
         .ui-container {
             position: absolute;
             bottom: 120px;
@@ -30,6 +31,7 @@
             border-radius: 5px;
         }
 
+        /* Search Bar */
         .search-container {
             position: absolute;
             top: 10px;
@@ -63,14 +65,16 @@
 </head>
 <body>
 
+    <!-- Search Bar -->
     <div class="search-container">
-        <input type="text" id="search-input" placeholder="Enter Destination..." />
-        <button id="search-button">Navigate</button>
+        <input type="text" id="search-input" placeholder="Search rooms..." />
+        <button id="search-button">Search</button>
     </div>
 
+    <!-- UI Buttons -->
     <div class="ui-container">
         <button class="button" onclick="toggleRooms()">Toggle Rooms</button>
-        <button class="button" onclick="clearRoute()">Clear Route</button>
+        <button class="button" onclick="navigateToRoom()">Navigate</button>
     </div>
 
     <div id="map"></div>
@@ -83,8 +87,8 @@
             image: 'campus (2).png',
             bounds: [[0, 0], [302, 754]],
             markers: [
-                { name: "Library", coords: [51.79, 556.20] },
-                { name: "Main Gate", coords: [295.89, 263.14] }
+                { name: "College Main Gate", coords: [295.89, 263.14], realCoords: [11.081048, 77.135554] },
+                { name: "College Library", coords: [51.79, 556.20], realCoords: [11.080431, 77.136443] }
             ]
         };
 
@@ -92,58 +96,6 @@
         map.fitBounds(campus.bounds);
 
         var icon = L.icon({ iconUrl: 'ok (2).png', iconSize: [20, 20] });
-        var userIcon = L.icon({ iconUrl: 'user.png', iconSize: [25, 25] });
-
-        var userMarker = null;
-        var routeLine = null;
-        var destinationMarker = null;
-
-        function gpsToMap(lat, lon) {
-            var lat1 = 11.081048, lon1 = 77.135554, x1 = 295.89, y1 = 263.14;
-            var lat2 = 11.080431, lon2 = 77.136443, x2 = 51.79, y2 = 556.20;
-
-            var scaleX = (x2 - x1) / (lon2 - lon1);
-            var scaleY = (y2 - y1) / (lat2 - lat1);
-
-            var x = x1 + (lon - lon1) * scaleX;
-            var y = y1 + (lat - lat1) * scaleY;
-
-            return [y, x];
-        }
-
-        function updateLocation(position) {
-            var lat = position.coords.latitude;
-            var lon = position.coords.longitude;
-            var mappedCoords = gpsToMap(lat, lon);
-
-            if (userMarker) {
-                userMarker.setLatLng(mappedCoords);
-            } else {
-                userMarker = L.marker(mappedCoords, { icon: userIcon }).addTo(map)
-                    .bindTooltip("You are here", { permanent: true, direction: 'top' });
-            }
-
-            if (destinationMarker) {
-                drawRoute(mappedCoords, destinationMarker.getLatLng());
-            }
-        }
-
-        function errorHandler(error) {
-            console.error("Error getting location:", error);
-        }
-
-        function startLocationTracking() {
-            if (navigator.geolocation) {
-                navigator.geolocation.watchPosition(updateLocation, errorHandler, {
-                    enableHighAccuracy: true,
-                    maximumAge: 1000
-                });
-            } else {
-                alert("Geolocation is not supported by your browser.");
-            }
-        }
-
-        startLocationTracking();
 
         var roomMarkers = [];
 
@@ -160,50 +112,53 @@
             }
         }
 
+        function highlightRoom(room) {
+            map.setView(room.coords, 3);
+            var marker = L.marker(room.coords, { icon }).addTo(map)
+                .bindTooltip(room.name, { permanent: true, direction: 'top' });
+
+            setTimeout(() => map.removeLayer(marker), 3000);
+        }
+
         function searchRoom() {
             var searchValue = document.getElementById("search-input").value.toLowerCase();
             var foundRoom = campus.markers.find(room => room.name.toLowerCase().includes(searchValue));
 
             if (foundRoom) {
-                navigateToRoom(foundRoom);
+                highlightRoom(foundRoom);
             } else {
                 alert("Room not found!");
             }
         }
 
-        function navigateToRoom(room) {
-            if (destinationMarker) {
-                map.removeLayer(destinationMarker);
-            }
-            destinationMarker = L.marker(room.coords, { icon }).addTo(map)
-                .bindTooltip("Destination", { permanent: true, direction: 'top' });
-
-            if (userMarker) {
-                drawRoute(userMarker.getLatLng(), room.coords);
-            }
-        }
-
-        function drawRoute(start, end) {
-            if (routeLine) {
-                map.removeLayer(routeLine);
-            }
-
-            routeLine = L.polyline([start, end], { color: 'blue', weight: 3 }).addTo(map);
-            map.fitBounds(L.latLngBounds([start, end]));
-        }
-
-        function clearRoute() {
-            if (routeLine) {
-                map.removeLayer(routeLine);
-                routeLine = null;
-            }
-            if (destinationMarker) {
-                map.removeLayer(destinationMarker);
-                destinationMarker = null;
-            }
-        }
-
         document.getElementById("search-button").addEventListener("click", searchRoom);
+
+        // Set Live Location to Updated Campus Coordinates
+        var liveLocation = { coords: [328.45, 264.57], realCoords: [11.081145, 77.135549] };
+        var liveIcon = L.icon({ iconUrl: 'live.png', iconSize: [25, 25] });
+
+        var liveMarker = L.marker(liveLocation.coords, { icon: liveIcon }).addTo(map)
+            .bindTooltip("You are here", { permanent: true, direction: 'top' });
+
+        // Navigation Function
+        function navigateToRoom() {
+            var searchValue = document.getElementById("search-input").value.toLowerCase();
+            var destination = campus.markers.find(room => room.name.toLowerCase().includes(searchValue));
+
+            if (!destination) {
+                alert("Room not found!");
+                return;
+            }
+
+            var start = liveLocation.coords;
+            var end = destination.coords;
+
+            var path = L.polyline([start, end], { color: 'blue', weight: 4 }).addTo(map);
+            map.fitBounds([start, end]);
+
+            setTimeout(() => map.removeLayer(path), 10000);
+        }
+
     </script>
 </body>
 </html>
