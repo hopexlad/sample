@@ -80,7 +80,7 @@
         var map = L.map('map', { minZoom: -2, maxZoom: 4, crs: L.CRS.Simple });
 
         var campus = {
-            image: 'campus.png',
+            image: 'campus (2).png',
             bounds: [[0, 0], [302, 754]],
             markers: [
                 { name: "Library", coords: [51.79, 556.20] },
@@ -91,7 +91,7 @@
         var imageOverlay = L.imageOverlay(campus.image, campus.bounds).addTo(map);
         map.fitBounds(campus.bounds);
 
-        var icon = L.icon({ iconUrl: 'ok.png', iconSize: [20, 20] });
+        var icon = L.icon({ iconUrl: 'ok (2).png', iconSize: [20, 20] });
         var userIcon = L.icon({ iconUrl: 'user.png', iconSize: [25, 25] });
 
         var userMarker = null;
