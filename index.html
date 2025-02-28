@@ -8,8 +8,8 @@
     <style>
         body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; }
         #map { width: 100vw; height: 100vh; }
-        
-        /* UI Buttons */
+
+        /* UI Elements */
         .ui-container {
             position: absolute;
             bottom: 120px;
@@ -22,7 +22,7 @@
         .button {
             margin: 5px 0;
             padding: 10px;
-            width: 120px;
+            width: 100px;
             text-align: center;
             background: green;
             color: white;
@@ -73,8 +73,7 @@
 
     <!-- UI Buttons -->
     <div class="ui-container">
-        <button class="button" onclick="toggleRooms()">Toggle Rooms</button>
-        <button class="button" onclick="toggleTracking()">Live Location</button>
+        <button class="button" onclick="toggleRooms()">Rooms</button>
     </div>
 
     <div id="map"></div>
@@ -82,17 +81,13 @@
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
         var map = L.map('map', { minZoom: -2, maxZoom: 4, crs: L.CRS.Simple });
-        var userMarker = null;
-        var tracking = false;
-        var routeLine = null;
 
         var campus = {
             image: 'campus (2).png',
             bounds: [[0, 0], [302, 754]],
             markers: [
-                { name: "Library", coords: [47.74, 512.00] },
-                { name: "Auditorium", coords: [250.85, 601.00] },
-                { name: "Food Court", coords: [214.83, 717.00] }
+                { name: "Library", coords: [51.79, 556.20] },
+                { name: "Main Gate", coords: [295.89, 263.14] }
             ]
         };
 
@@ -100,6 +95,53 @@
         map.fitBounds(campus.bounds);
 
         var icon = L.icon({ iconUrl: 'ok (2).png', iconSize: [20, 20] });
+        var userIcon = L.icon({ iconUrl: 'user.png', iconSize: [25, 25] });
+
+        var userMarker = null;
+
+        function gpsToMap(lat, lon) {
+            var lat1 = 11.081048, lon1 = 77.135554, x1 = 295.89, y1 = 263.14;
+            var lat2 = 11.080431, lon2 = 77.136443, x2 = 51.79, y2 = 556.20;
+
+            var scaleX = (x2 - x1) / (lon2 - lon1);
+            var scaleY = (y2 - y1) / (lat2 - lat1);
+
+            var x = x1 + (lon - lon1) * scaleX;
+            var y = y1 + (lat - lat1) * scaleY;
+
+            return [y, x];
+        }
+
+        function updateLocation(position) {
+            var lat = position.coords.latitude;
+            var lon = position.coords.longitude;
+            var mappedCoords = gpsToMap(lat, lon);
+
+            if (userMarker) {
+                userMarker.setLatLng(mappedCoords);
+            } else {
+                userMarker = L.marker(mappedCoords, { icon: userIcon }).addTo(map)
+                    .bindTooltip("You are here", { permanent: true, direction: 'top' });
+            }
+        }
+
+        function errorHandler(error) {
+            console.error("Error getting location:", error);
+        }
+
+        function startLocationTracking() {
+            if (navigator.geolocation) {
+                navigator.geolocation.watchPosition(updateLocation, errorHandler, {
+                    enableHighAccuracy: true,
+                    maximumAge: 1000
+                });
+            } else {
+                alert("Geolocation is not supported by your browser.");
+            }
+        }
+
+        startLocationTracking();
+
         var roomMarkers = [];
 
         function toggleRooms() {
@@ -115,6 +157,14 @@
             }
         }
 
+        function highlightRoom(room) {
+            map.setView(room.coords, 3);
+            var marker = L.marker(room.coords, { icon }).addTo(map)
+                .bindTooltip(room.name, { permanent: true, direction: 'top' });
+
+            setTimeout(() => map.removeLayer(marker), 3000);
+        }
+
         function searchRoom() {
             var searchValue = document.getElementById("search-input").value.toLowerCase();
             var foundRoom = campus.markers.find(room => room.name.toLowerCase().includes(searchValue));
@@ -127,68 +177,6 @@
         }
 
         document.getElementById("search-button").addEventListener("click", searchRoom);
-
-        function highlightRoom(room) {
-            map.setView(room.coords, 3);
-            var marker = L.marker(room.coords, { icon }).addTo(map)
-                .bindTooltip(room.name, { permanent: true, direction: 'top' });
-
-            setTimeout(() => map.removeLayer(marker), 3000);
-
-            if (userMarker) {
-                drawRoute(userMarker.getLatLng(), room.coords);
-            }
-        }
-
-        function drawRoute(userCoords, roomCoords) {
-            if (routeLine) {
-                map.removeLayer(routeLine);
-            }
-
-            routeLine = L.polyline([userCoords, roomCoords], { color: 'blue', weight: 3 }).addTo(map);
-        }
-
-        function toggleTracking() {
-            tracking = !tracking;
-
-            if (tracking) {
-                if (navigator.geolocation) {
-                    navigator.geolocation.watchPosition(updateLocation, handleLocationError, {
-                        enableHighAccuracy: true
-                    });
-                } else {
-                    alert("Geolocation is not supported by your browser.");
-                }
-            } else {
-                if (userMarker) {
-                    map.removeLayer(userMarker);
-                    userMarker = null;
-                }
-            }
-        }
-
-        function updateLocation(position) {
-            var lat = position.coords.latitude;
-            var lng = position.coords.longitude;
-            
-            // Convert real-world GPS coordinates to campus map coordinates (needs a proper transformation function)
-            var campusX = (lat - 11.0804) * 50000;
-            var campusY = (lng - 77.1362) * 50000;
-
-            if (userMarker) {
-                userMarker.setLatLng([campusX, campusY]);
-            } else {
-                userMarker = L.marker([campusX, campusY], { icon }).addTo(map)
-                    .bindTooltip("You are here", { permanent: true, direction: 'top' });
-            }
-
-            map.setView([campusX, campusY], 3);
-        }
-
-        function handleLocationError(error) {
-            console.warn("Geolocation error:", error.message);
-        }
     </script>
 </body>
 </html>
-
