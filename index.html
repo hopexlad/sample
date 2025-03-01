@@ -220,9 +220,32 @@
             alert("Navigation logic goes here.");
         }
 
+// Enable manual rotation using touch gestures (Hammer.js)
+var mapContainer = document.getElementById('map');
+var hammer = new Hammer(mapContainer);
+
+// Enable rotation
+hammer.get('rotate').set({ enable: true });
+
+var currentRotation = 0;
+var lastRotation = 0;
+var dampingFactor = 0.2; // 🔹 Reduce this for even smoother motion
+
+hammer.on("rotatestart", function (event) {
+    lastRotation = event.rotation; // Initialize rotation reference
+});
+
+hammer.on("rotatemove", function (event) {
+    var deltaRotation = event.rotation - lastRotation; // Get change in rotation
+    lastRotation = event.rotation; // Update last rotation
+
+    currentRotation += deltaRotation * dampingFactor; // Apply damping for smoothness
+
+    mapContainer.style.transform = `rotate(${currentRotation}deg)`;
+});
+
 hammer.on("rotateend", function () {
-    // Normalize rotation between 0 - 360 degrees
-    currentRotation = ((currentRotation % 360) + 360) % 360;
+    currentRotation = ((currentRotation % 360) + 360) % 360; // Normalize between 0-360
 });
 
     </script>
