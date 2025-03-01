@@ -224,19 +224,25 @@ var mapContainer = document.getElementById('map');
 var hammer = new Hammer(mapContainer);
 
 hammer.get('rotate').set({ enable: true });
+
 var currentRotation = 0;
+var lastRotation = 0;
+
+hammer.on("rotatestart", function (event) {
+    lastRotation = event.rotation; // Store initial rotation
+});
 
 hammer.on("rotatemove", function (event) {
-    currentRotation += event.rotation;
+    var rotationDelta = event.rotation - lastRotation; // Get relative rotation
+    currentRotation += rotationDelta;
+    lastRotation = event.rotation; // Update last rotation
     mapContainer.style.transform = `rotate(${currentRotation}deg)`;
 });
 
 hammer.on("rotateend", function () {
     // Keep rotation within 0 - 360 degrees
     currentRotation = currentRotation % 360;
-});
-
-        
+});     
     </script>
 </body>
 </html>
