@@ -221,32 +221,32 @@
         }
 
 // Enable manual rotation using touch gestures (Hammer.js)
-var mapContainer = document.getElementById('map');
+var mapPane = document.querySelector('.leaflet-map-pane'); // Target Leaflet's map layer
 var hammer = new Hammer(mapContainer);
 
-// Enable rotation
 hammer.get('rotate').set({ enable: true });
 
 var currentRotation = 0;
 var lastRotation = 0;
-var dampingFactor = 0.2; // 🔹 Reduce this for even smoother motion
+var dampingFactor = 0.1; // 🔹 Adjust for smoothness
 
 hammer.on("rotatestart", function (event) {
-    lastRotation = event.rotation; // Initialize rotation reference
+    lastRotation = event.rotation;
 });
 
 hammer.on("rotatemove", function (event) {
-    var deltaRotation = event.rotation - lastRotation; // Get change in rotation
-    lastRotation = event.rotation; // Update last rotation
+    var deltaRotation = event.rotation - lastRotation;
+    lastRotation = event.rotation;
 
-    currentRotation += deltaRotation * dampingFactor; // Apply damping for smoothness
+    currentRotation += deltaRotation * dampingFactor;
 
-    mapContainer.style.transform = `rotate(${currentRotation}deg)`;
+    mapPane.style.transform = `rotate(${currentRotation}deg)`;
 });
 
 hammer.on("rotateend", function () {
-    currentRotation = ((currentRotation % 360) + 360) % 360; // Normalize between 0-360
+    currentRotation = ((currentRotation % 360) + 360) % 360;
 });
+
 
     </script>
 </body>
