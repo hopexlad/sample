@@ -9,7 +9,7 @@
         body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; }
         #map { width: 100vw; height: 100vh; }
 
-        /* UI Buttons */
+        /* UI Layout */
         .ui-container {
             position: absolute;
             bottom: 120px;
@@ -31,7 +31,7 @@
             border-radius: 5px;
         }
 
-        /* Search Bar */
+        /* Updated Search Container */
         .search-container {
             position: absolute;
             top: 10px;
@@ -39,22 +39,22 @@
             transform: translateX(-50%);
             z-index: 1002;
             background: rgba(255, 255, 255, 0.9);
-            padding: 5px;
-            border-radius: 5px;
+            padding: 8px;
+            border-radius: 8px;
             display: flex;
+            gap: 8px;
             align-items: center;
         }
 
-        #search-input {
-            width: 200px;
-            padding: 5px;
+        .search-container input {
+            width: 180px;
+            padding: 6px;
             border: 1px solid #ccc;
             border-radius: 5px;
         }
 
-        #search-button {
-            margin-left: 5px;
-            padding: 5px 10px;
+        .search-container button {
+            padding: 6px 12px;
             border: none;
             background: green;
             color: white;
@@ -65,16 +65,18 @@
 </head>
 <body>
 
-    <!-- Search Bar -->
+    <!-- Search and Navigation Bar -->
     <div class="search-container">
+        <input type="text" id="start-location" placeholder="Choose your location..." />
+        <input type="text" id="destination" placeholder="Your destination..." />
+        <button id="navigate-button">Go</button>
         <input type="text" id="search-input" placeholder="Search rooms..." />
         <button id="search-button">Search</button>
     </div>
 
     <!-- UI Buttons -->
     <div class="ui-container">
-        <button class="button" onclick="toggleRooms()">Toggle Rooms</button>
-        <button class="button" onclick="navigateToRoom()">Navigate</button>
+        <button class="button" onclick="toggleRooms()">Rooms</button>
         <button class="button" onclick="recenterMap()">Re-Center</button>
     </div>
 
@@ -129,6 +131,7 @@
             setTimeout(() => map.removeLayer(marker), 3000);
         }
 
+        // Search Room Function
         function searchRoom() {
             var searchValue = document.getElementById("search-input").value.toLowerCase();
             var foundRoom = campus.markers.find(room => room.name.toLowerCase().includes(searchValue));
@@ -142,33 +145,34 @@
 
         document.getElementById("search-button").addEventListener("click", searchRoom);
 
-        // Set Live Location to Updated Campus Coordinates
-        var liveLocation = { coords: [328.45, 264.57] };
-        var liveIcon = L.icon({ iconUrl: 'ok (2).png', iconSize: [25, 25] });
+        // Trigger search when Enter key is pressed
+        document.getElementById("search-input").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                searchRoom();
+            }
+        });
 
-        var liveMarker = L.marker(liveLocation.coords, { icon: liveIcon }).addTo(map)
-            .bindTooltip("You are here", { permanent: true, direction: 'top' });
+        // Navigation Function
+        document.getElementById("navigate-button").addEventListener("click", function () {
+            var startValue = document.getElementById("start-location").value.toLowerCase();
+            var destinationValue = document.getElementById("destination").value.toLowerCase();
 
-        // Navigation Function with Stepped Path
-        function navigateToRoom() {
-            var searchValue = document.getElementById("search-input").value.toLowerCase();
-            var destination = campus.markers.find(room => room.name.toLowerCase().includes(searchValue));
+            var startRoom = campus.markers.find(room => room.name.toLowerCase().includes(startValue));
+            var destinationRoom = campus.markers.find(room => room.name.toLowerCase().includes(destinationValue));
 
-            if (!destination) {
-                alert("Room not found!");
+            if (!startRoom || !destinationRoom) {
+                alert("Invalid start or destination!");
                 return;
             }
 
-            var start = liveLocation.coords;
-            var end = destination.coords;
+            var start = startRoom.coords;
+            var end = destinationRoom.coords;
 
-            // Simulated stepped navigation (hallway-based)
-            var midX = (start[0] + end[0]) / 2;
-            var midY = (start[1] + end[1]) / 2;
+            // Simulated stepped navigation path
             var waypoints = [
                 start,
-                [midX, start[1]], // Move horizontally
-                [midX, end[1]],   // Move vertically
+                [(start[0] + end[0]) / 2, start[1]],
+                [(start[0] + end[0]) / 2, end[1]],
                 end
             ];
 
@@ -176,7 +180,7 @@
             map.fitBounds([start, end]);
 
             setTimeout(() => map.removeLayer(path), 10000);
-        }
+        });
 
         // Recenter Map Function
         function recenterMap() {
