@@ -152,42 +152,25 @@
                 });
             }
         }
-        function drawPaths() {
-    campus.paths.forEach(path => {
-        let route = [
-            campus.markers.find(m => m.name === path.start).coords,
-            ...path.waypoints,
-            campus.markers.find(m => m.name === path.end).coords
-        ];
-        L.polyline(route, { color: 'blue', weight: 3 }).addTo(map);
-           });
-         }
-
-// Call function to draw paths
-drawPaths();
-
-        function highlightRoom(room) {
-            map.setView(room.coords, 3);
-            var marker = L.marker(room.coords, { icon }).addTo(map)
-                .bindTooltip(room.name, { permanent: true, direction: 'top' });
-            setTimeout(() => map.removeLayer(marker), 3000);
+       function drawPaths(start, destination) {
+            map.eachLayer(layer => { if (layer instanceof L.Polyline) map.removeLayer(layer); });
+            let path = campus.paths.find(p => p.start === start && p.end === destination);
+            if (path) {
+                let route = [
+                    campus.markers.find(m => m.name === path.start).coords,
+                    ...path.waypoints,
+                    campus.markers.find(m => m.name === path.end).coords
+                ];
+                L.polyline(route, { color: 'blue', weight: 3 }).addTo(map);
+            }
         }
-        function showSuggestions(inputElement, suggestionBoxId) {
-            var inputValue = inputElement.value.toLowerCase();
-            var suggestionBox = document.getElementById(suggestionBoxId);
-            suggestionBox.innerHTML = "";
-            if (!inputValue) return;
-            var filteredRooms = campus.markers.map(room => room.name).filter(room => room.toLowerCase().includes(inputValue));
-            filteredRooms.forEach(room => {
-                var div = document.createElement("div");
-                div.textContent = room;
-                div.onclick = function() {
-                    inputElement.value = room;
-                    suggestionBox.innerHTML = "";
-                };
-                suggestionBox.appendChild(div);
-            });
-        }
+        
+        document.getElementById("navigate-button").addEventListener("click", function () {
+            var start = document.getElementById("start-location").value;
+            var destination = document.getElementById("destination").value;
+            if (start && destination) drawPaths(start, destination);
+            else alert("Please enter both start and destination.");
+        });
         document.getElementById("search-button").addEventListener("click", function () {
             var searchValue = document.getElementById("search-input").value.toLowerCase();
             var foundRoom = campus.markers.find(room => room.name.toLowerCase().includes(searchValue));
