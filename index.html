@@ -5,14 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Interactive Campus Map</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-    
-
+    <script src="https://hammerjs.github.io/dist/hammer.min.js"></script>
     <style>
         body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; }
         #map { width: 100vw; height: 100vh; }
-        
-
-        /* UI Layout */
         .ui-container {
             position: absolute;
             bottom: 120px;
@@ -21,7 +17,6 @@
             flex-direction: column;
             z-index: 1001;
         }
-
         .button {
             margin: 5px 0;
             padding: 10px;
@@ -33,8 +28,6 @@
             cursor: pointer;
             border-radius: 5px;
         }
-
-        /* Updated Search Container */
         .search-container {
             position: absolute;
             top: 10px;
@@ -48,12 +41,10 @@
             gap: 8px;
             align-items: center;
         }
-
         .autocomplete-container {
             position: relative;
             display: inline-block;
         }
-
         .suggestions {
             position: absolute;
             top: 100%;
@@ -65,23 +56,19 @@
             overflow-y: auto;
             z-index: 1003;
         }
-
         .suggestions div {
             padding: 8px;
             cursor: pointer;
         }
-
         .suggestions div:hover {
             background: #ddd;
         }
-
         .search-container input {
             width: 180px;
             padding: 6px;
             border: 1px solid #ccc;
             border-radius: 5px;
         }
-
         .search-container button {
             padding: 6px 12px;
             border: none;
@@ -93,40 +80,30 @@
     </style>
 </head>
 <body>
-
-    <!-- Search and Navigation Bar with Autocomplete -->
     <div class="search-container">
         <div class="autocomplete-container">
             <input type="text" id="search-input" placeholder="Search rooms..." oninput="showSuggestions(this, 'search-suggestions')" />
             <div class="suggestions" id="search-suggestions"></div>
         </div>
         <button id="search-button">Search</button>
-
         <div class="autocomplete-container">
             <input type="text" id="start-location" placeholder="Choose your location..." oninput="showSuggestions(this, 'start-suggestions')" />
             <div class="suggestions" id="start-suggestions"></div>
         </div>
-        
         <div class="autocomplete-container">
             <input type="text" id="destination" placeholder="Your destination..." oninput="showSuggestions(this, 'destination-suggestions')" />
             <div class="suggestions" id="destination-suggestions"></div>
         </div>
-        
         <button id="navigate-button">Go</button>
     </div>
-
-    <!-- UI Buttons -->
     <div class="ui-container">
         <button class="button" onclick="toggleRooms()">Rooms</button>
         <button class="button" onclick="recenterMap()">Re-Center</button>
     </div>
-
     <div id="map"></div>
-
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
         var map = L.map('map', { minZoom: -2, maxZoom: 4, crs: L.CRS.Simple });
-
         var campus = {
             image: 'campus (2).png',
             bounds: [[0, 0], [302, 754]],
@@ -135,22 +112,13 @@
                 { name: "Library", coords: [51.79, 556.20] },
                 { name: "Food Court 1", coords: [214.83, 717.00] },
                 { name: "Auditorium 1", coords: [250.85, 601.00] },
-                { name: "Seminar Hall", coords: [154.80, 610.00] },
-                { name: "Mess", coords: [190.82, 603.00] },
-                { name: "Lab 4", coords: [201.83, 514.00] },
-                { name: "OAT", coords: [150.80, 429.00] },
-                { name: "Lab 5", coords: [264.86, 482.00] },
-                { name: "Principal Office", coords: [36.87, 11.50] }
+                { name: "Seminar Hall", coords: [154.80, 610.00] }
             ]
         };
-
         var imageOverlay = L.imageOverlay(campus.image, campus.bounds).addTo(map);
         map.fitBounds(campus.bounds);
-
         var icon = L.icon({ iconUrl: 'ok (2).png', iconSize: [20, 20] });
-
         var roomMarkers = [];
-
         function toggleRooms() {
             if (roomMarkers.length) {
                 roomMarkers.forEach(marker => map.removeLayer(marker));
@@ -163,23 +131,18 @@
                 });
             }
         }
-
         function highlightRoom(room) {
             map.setView(room.coords, 3);
             var marker = L.marker(room.coords, { icon }).addTo(map)
                 .bindTooltip(room.name, { permanent: true, direction: 'top' });
-
             setTimeout(() => map.removeLayer(marker), 3000);
         }
-
         function showSuggestions(inputElement, suggestionBoxId) {
             var inputValue = inputElement.value.toLowerCase();
             var suggestionBox = document.getElementById(suggestionBoxId);
             suggestionBox.innerHTML = "";
             if (!inputValue) return;
-
             var filteredRooms = campus.markers.map(room => room.name).filter(room => room.toLowerCase().includes(inputValue));
-
             filteredRooms.forEach(room => {
                 var div = document.createElement("div");
                 div.textContent = room;
@@ -190,64 +153,13 @@
                 suggestionBox.appendChild(div);
             });
         }
-
-        function searchRoom() {
+        document.getElementById("search-button").addEventListener("click", function () {
             var searchValue = document.getElementById("search-input").value.toLowerCase();
             var foundRoom = campus.markers.find(room => room.name.toLowerCase().includes(searchValue));
-
             if (foundRoom) highlightRoom(foundRoom);
             else alert("Room not found!");
-        }
-
-        document.getElementById("search-button").addEventListener("click", searchRoom);
-        document.getElementById("search-input").addEventListener("keypress", function (e) {
-            if (e.key === "Enter") searchRoom();
         });
-
-        document.getElementById("navigate-button").addEventListener("click", navigate);
-        document.getElementById("start-location").addEventListener("keypress", function (e) {
-            if (e.key === "Enter") navigate();
-        });
-        document.getElementById("destination").addEventListener("keypress", function (e) {
-            if (e.key === "Enter") navigate();
-        });
-
-        function recenterMap() {
-            map.fitBounds(campus.bounds);
-        }
-
-        function navigate() {
-            alert("Navigation logic goes here.");
-        }
-
-// Enable manual rotation using touch gestures (Hammer.js)
-var mapPane = document.querySelector('.leaflet-map-pane'); // Target Leaflet's map layer
-var hammer = new Hammer(mapContainer);
-
-hammer.get('rotate').set({ enable: true });
-
-var currentRotation = 0;
-var lastRotation = 0;
-var dampingFactor = 0.1; // 🔹 Adjust for smoothness
-
-hammer.on("rotatestart", function (event) {
-    lastRotation = event.rotation;
-});
-
-hammer.on("rotatemove", function (event) {
-    var deltaRotation = event.rotation - lastRotation;
-    lastRotation = event.rotation;
-
-    currentRotation += deltaRotation * dampingFactor;
-
-    mapPane.style.transform = `rotate(${currentRotation}deg)`;
-});
-
-hammer.on("rotateend", function () {
-    currentRotation = ((currentRotation % 360) + 360) % 360;
-});
-
-
+        function recenterMap() { map.fitBounds(campus.bounds); }
     </script>
 </body>
 </html>
