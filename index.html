@@ -227,7 +227,7 @@ var hammer = new Hammer(mapContainer);
 hammer.get('rotate').set({ enable: true });
 
 var currentRotation = 0;
-var sensitivity = 0.0003; // 🔹 Adjust this (lower = smoother rotation)
+var sensitivity = 0.03; // 🔹 Adjust this (lower = smoother rotation)
 
 hammer.on("rotatestart", function (event) {
     event.target.dataset.startRotation = currentRotation; // Store the current rotation
