@@ -169,16 +169,14 @@
             setTimeout(() => map.removeLayer(marker), 3000);
         }
 
-        // Autocomplete Suggestions
         function showSuggestions(inputElement, suggestionBoxId) {
             var inputValue = inputElement.value.toLowerCase();
             var suggestionBox = document.getElementById(suggestionBoxId);
-            
             suggestionBox.innerHTML = "";
             if (!inputValue) return;
-            
+
             var filteredRooms = campus.markers.map(room => room.name).filter(room => room.toLowerCase().includes(inputValue));
-            
+
             filteredRooms.forEach(room => {
                 var div = document.createElement("div");
                 div.textContent = room;
@@ -190,41 +188,33 @@
             });
         }
 
-        // Search Room Function
         function searchRoom() {
             var searchValue = document.getElementById("search-input").value.toLowerCase();
             var foundRoom = campus.markers.find(room => room.name.toLowerCase().includes(searchValue));
 
-            if (foundRoom) {
-                highlightRoom(foundRoom);
-            } else {
-                alert("Room not found!");
-            }
+            if (foundRoom) highlightRoom(foundRoom);
+            else alert("Room not found!");
         }
 
         document.getElementById("search-button").addEventListener("click", searchRoom);
+        document.getElementById("search-input").addEventListener("keypress", function (e) {
+            if (e.key === "Enter") searchRoom();
+        });
 
-        // Navigation Function
-        document.getElementById("navigate-button").addEventListener("click", function () {
-            var startValue = document.getElementById("start-location").value.toLowerCase();
-            var destinationValue = document.getElementById("destination").value.toLowerCase();
-
-            var startRoom = campus.markers.find(room => room.name.toLowerCase().includes(startValue));
-            var destinationRoom = campus.markers.find(room => room.name.toLowerCase().includes(destinationValue));
-
-            if (!startRoom || !destinationRoom) {
-                alert("Invalid start or destination!");
-                return;
-            }
-
-            var path = L.polyline([startRoom.coords, destinationRoom.coords], { color: 'blue', weight: 4 }).addTo(map);
-            map.fitBounds([startRoom.coords, destinationRoom.coords]);
-
-            setTimeout(() => map.removeLayer(path), 10000);
+        document.getElementById("navigate-button").addEventListener("click", navigate);
+        document.getElementById("start-location").addEventListener("keypress", function (e) {
+            if (e.key === "Enter") navigate();
+        });
+        document.getElementById("destination").addEventListener("keypress", function (e) {
+            if (e.key === "Enter") navigate();
         });
 
         function recenterMap() {
             map.fitBounds(campus.bounds);
+        }
+
+        function navigate() {
+            alert("Navigation logic goes here.");
         }
     </script>
 </body>
