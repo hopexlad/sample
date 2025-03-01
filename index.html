@@ -97,8 +97,8 @@
         <button id="navigate-button">Go</button>
     </div>
     <div class="ui-container">
-        <button class="button" id="toggle-rooms">Rooms</button>
-        <button class="button" id="recenter-map">Re-Center</button>
+        <button class="button" id="rooms-button">Rooms</button>
+        <button class="button" id="recenter-button">Re-Center</button>
     </div>
     <div id="map"></div>
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
@@ -119,16 +119,6 @@
         map.fitBounds(campus.bounds);
         var icon = L.icon({ iconUrl: 'ok (2).png', iconSize: [20, 20] });
         var roomMarkers = [];
-        document.getElementById("search-button").addEventListener("click", searchRoom);
-        document.getElementById("toggle-rooms").addEventListener("click", toggleRooms);
-        document.getElementById("recenter-map").addEventListener("click", recenterMap);
-        document.getElementById("navigate-button").addEventListener("click", function() { alert("Navigation feature coming soon!"); });
-        function searchRoom() {
-            var searchValue = document.getElementById("search-input").value.toLowerCase();
-            var foundRoom = campus.markers.find(room => room.name.toLowerCase().includes(searchValue));
-            if (foundRoom) highlightRoom(foundRoom);
-            else alert("Room not found!");
-        }
         function toggleRooms() {
             if (roomMarkers.length) {
                 roomMarkers.forEach(marker => map.removeLayer(marker));
@@ -147,15 +137,33 @@
                 .bindTooltip(room.name, { permanent: true, direction: 'top' });
             setTimeout(() => map.removeLayer(marker), 3000);
         }
-        function recenterMap() { map.fitBounds(campus.bounds); }
-        document.addEventListener("keydown", function(event) {
-            if (event.key === "Enter") {
-                if (document.activeElement.id === "search-input") searchRoom();
-                if (document.activeElement.id === "navigate-button") alert("Navigation feature coming soon!");
-                if (document.activeElement.id === "toggle-rooms") toggleRooms();
-                if (document.activeElement.id === "recenter-map") recenterMap();
-            }
+        function showSuggestions(inputElement, suggestionBoxId) {
+            var inputValue = inputElement.value.toLowerCase();
+            var suggestionBox = document.getElementById(suggestionBoxId);
+            suggestionBox.innerHTML = "";
+            if (!inputValue) return;
+            var filteredRooms = campus.markers.map(room => room.name).filter(room => room.toLowerCase().includes(inputValue));
+            filteredRooms.forEach(room => {
+                var div = document.createElement("div");
+                div.textContent = room;
+                div.onclick = function() {
+                    inputElement.value = room;
+                    suggestionBox.innerHTML = "";
+                };
+                suggestionBox.appendChild(div);
+            });
+        }
+        document.getElementById("search-button").addEventListener("click", function () {
+            var searchValue = document.getElementById("search-input").value.toLowerCase();
+            var foundRoom = campus.markers.find(room => room.name.toLowerCase().includes(searchValue));
+            if (foundRoom) highlightRoom(foundRoom);
+            else alert("Room not found!");
         });
+        document.getElementById("search-input").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") document.getElementById("search-button").click();
+        });
+        document.getElementById("rooms-button").addEventListener("click", toggleRooms);
+        document.getElementById("recenter-button").addEventListener("click", () => map.fitBounds(campus.bounds));
     </script>
 </body>
 </html>
