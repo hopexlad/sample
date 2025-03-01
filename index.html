@@ -11,6 +11,8 @@
 
         /* UI Buttons */
         .ui-container {
+            <button class="button" onclick="recenterMap()">Re-Center</button>
+
             position: absolute;
             bottom: 120px;
             right: 20px;
@@ -60,6 +62,7 @@
             color: white;
             cursor: pointer;
             border-radius: 5px;
+            
         }
     </style>
 </head>
@@ -138,6 +141,9 @@
                 alert("Room not found!");
             }
         }
+function recenterMap() {
+    map.fitBounds(campus.bounds);
+}
 
         document.getElementById("search-button").addEventListener("click", searchRoom);
 
