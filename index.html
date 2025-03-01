@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Interactive Campus Map</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
+    
 
     <style>
         body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; }
@@ -219,25 +219,6 @@
         function navigate() {
             alert("Navigation logic goes here.");
         }
-       // Enable manual rotation using touch gestures (Hammer.js)
-var mapContainer = document.getElementById('map');
-var hammer = new Hammer(mapContainer);
-
-// Enable rotation in Hammer.js
-hammer.get('rotate').set({ enable: true });
-
-var currentRotation = 0;
-var sensitivity = 0.03; // 🔹 Adjust this (lower = smoother rotation)
-
-hammer.on("rotatestart", function (event) {
-    event.target.dataset.startRotation = currentRotation; // Store the current rotation
-});
-
-hammer.on("rotatemove", function (event) {
-    var startRotation = parseFloat(event.target.dataset.startRotation) || 0;
-    currentRotation = startRotation + event.rotation * sensitivity; // 🔹 Reduced rotation effect
-    mapContainer.style.transform = `rotate(${currentRotation}deg)`;
-});
 
 hammer.on("rotateend", function () {
     // Normalize rotation between 0 - 360 degrees
