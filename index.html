@@ -8,6 +8,8 @@
     <style>
         body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; }
         #map { width: 100vw; height: 100vh; }
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
+
 
         /* UI Layout */
         .ui-container {
@@ -216,6 +218,24 @@
         function navigate() {
             alert("Navigation logic goes here.");
         }
+        // Enable manual rotation using touch gestures (Hammer.js)
+var mapContainer = document.getElementById('map');
+var hammer = new Hammer(mapContainer);
+
+hammer.get('rotate').set({ enable: true });
+var currentRotation = 0;
+
+hammer.on("rotatemove", function (event) {
+    currentRotation += event.rotation;
+    mapContainer.style.transform = `rotate(${currentRotation}deg)`;
+});
+
+hammer.on("rotateend", function () {
+    // Keep rotation within 0 - 360 degrees
+    currentRotation = currentRotation % 360;
+});
+
+        
     </script>
 </body>
 </html>
