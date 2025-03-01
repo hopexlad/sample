@@ -11,8 +11,6 @@
 
         /* UI Buttons */
         .ui-container {
-            
-
             position: absolute;
             bottom: 120px;
             right: 20px;
@@ -62,7 +60,6 @@
             color: white;
             cursor: pointer;
             border-radius: 5px;
-            
         }
     </style>
 </head>
@@ -79,7 +76,6 @@
         <button class="button" onclick="toggleRooms()">Toggle Rooms</button>
         <button class="button" onclick="navigateToRoom()">Navigate</button>
         <button class="button" onclick="recenterMap()">Re-Center</button>
-
     </div>
 
     <div id="map"></div>
@@ -144,8 +140,6 @@
             }
         }
 
-}
-
         document.getElementById("search-button").addEventListener("click", searchRoom);
 
         // Set Live Location to Updated Campus Coordinates
@@ -183,14 +177,11 @@
 
             setTimeout(() => map.removeLayer(path), 10000);
         }
-        //recenter
-        function recenterMap() 
-        {
-            map.fitBounds(campus (2).bounds);
+
+        // Recenter Map Function
+        function recenterMap() {
+            map.fitBounds(campus.bounds);
         }
-
-
     </script>
 </body>
 </html>
-
