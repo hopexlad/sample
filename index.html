@@ -46,6 +46,32 @@
             align-items: center;
         }
 
+        .autocomplete-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background: white;
+            border: 1px solid #ccc;
+            max-height: 150px;
+            overflow-y: auto;
+            z-index: 1003;
+        }
+
+        .suggestions div {
+            padding: 8px;
+            cursor: pointer;
+        }
+
+        .suggestions div:hover {
+            background: #ddd;
+        }
+
         .search-container input {
             width: 180px;
             padding: 6px;
@@ -65,12 +91,24 @@
 </head>
 <body>
 
-    <!-- Search and Navigation Bar -->
+    <!-- Search and Navigation Bar with Autocomplete -->
     <div class="search-container">
-        <input type="text" id="search-input" placeholder="Search rooms..." />
+        <div class="autocomplete-container">
+            <input type="text" id="search-input" placeholder="Search rooms..." oninput="showSuggestions(this, 'search-suggestions')" />
+            <div class="suggestions" id="search-suggestions"></div>
+        </div>
         <button id="search-button">Search</button>
-         <input type="text" id="start-location" placeholder="Choose your location..." />
-        <input type="text" id="destination" placeholder="Your destination..." />
+
+        <div class="autocomplete-container">
+            <input type="text" id="start-location" placeholder="Choose your location..." oninput="showSuggestions(this, 'start-suggestions')" />
+            <div class="suggestions" id="start-suggestions"></div>
+        </div>
+        
+        <div class="autocomplete-container">
+            <input type="text" id="destination" placeholder="Your destination..." oninput="showSuggestions(this, 'destination-suggestions')" />
+            <div class="suggestions" id="destination-suggestions"></div>
+        </div>
+        
         <button id="navigate-button">Go</button>
     </div>
 
@@ -131,6 +169,27 @@
             setTimeout(() => map.removeLayer(marker), 3000);
         }
 
+        // Autocomplete Suggestions
+        function showSuggestions(inputElement, suggestionBoxId) {
+            var inputValue = inputElement.value.toLowerCase();
+            var suggestionBox = document.getElementById(suggestionBoxId);
+            
+            suggestionBox.innerHTML = "";
+            if (!inputValue) return;
+            
+            var filteredRooms = campus.markers.map(room => room.name).filter(room => room.toLowerCase().includes(inputValue));
+            
+            filteredRooms.forEach(room => {
+                var div = document.createElement("div");
+                div.textContent = room;
+                div.onclick = function() {
+                    inputElement.value = room;
+                    suggestionBox.innerHTML = "";
+                };
+                suggestionBox.appendChild(div);
+            });
+        }
+
         // Search Room Function
         function searchRoom() {
             var searchValue = document.getElementById("search-input").value.toLowerCase();
@@ -145,13 +204,6 @@
 
         document.getElementById("search-button").addEventListener("click", searchRoom);
 
-        // Trigger search when Enter key is pressed
-        document.getElementById("search-input").addEventListener("keypress", function(event) {
-            if (event.key === "Enter") {
-                searchRoom();
-            }
-        });
-
         // Navigation Function
         document.getElementById("navigate-button").addEventListener("click", function () {
             var startValue = document.getElementById("start-location").value.toLowerCase();
@@ -165,24 +217,12 @@
                 return;
             }
 
-            var start = startRoom.coords;
-            var end = destinationRoom.coords;
-
-            // Simulated stepped navigation path
-            var waypoints = [
-                start,
-                [(start[0] + end[0]) / 2, start[1]],
-                [(start[0] + end[0]) / 2, end[1]],
-                end
-            ];
-
-            var path = L.polyline(waypoints, { color: 'blue', weight: 4 }).addTo(map);
-            map.fitBounds([start, end]);
+            var path = L.polyline([startRoom.coords, destinationRoom.coords], { color: 'blue', weight: 4 }).addTo(map);
+            map.fitBounds([startRoom.coords, destinationRoom.coords]);
 
             setTimeout(() => map.removeLayer(path), 10000);
         });
 
-        // Recenter Map Function
         function recenterMap() {
             map.fitBounds(campus.bounds);
         }
